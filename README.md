@@ -315,9 +315,9 @@ pm2 stop Assistente   # Parar
 
 ## 👨‍💻 Autor
 
-**Idarlan Magalhaes**
+**Idarlan Magalhaes - Especialista em IA - Certificado pela UFC**
 
-Desenvolvido com ❤️ e muita ☕
+Desenvolvido com ❤️ e muito ☕
 
 ---
 
