@@ -1,324 +1,51 @@
-# 🤖 Assistente Pessoal - Telegram Bot
+# J.A.R.V.I.S. Core V3 - Assistente Pessoal Inteligente
 
-Um assistente pessoal completo integrado ao Telegram, com IA (Google Gemini), Google Workspace e automações inteligentes.
+![Python Version](https://img.shields.io/badge/python-3.11-blue)
+![Architecture](https://img.shields.io/badge/Architecture-Asynchronous_Microservices-success)
+![LLM](https://img.shields.io/badge/AI-Google_Gemini_Function_Calling-orange)
+![Docker](https://img.shields.io/badge/Deploy-Docker_Compose-2496ED)
 
----
+## 💡 Sobre o Projeto
 
-## 📋 Sumário
+Este é o repositório do **J.A.R.V.I.S. v3**, um assistente pessoal inteligente projetado para gerenciar rotinas de estudos, finanças e produtividade via Telegram. O projeto evoluiu de um script monolítico para uma **arquitetura de microsserviços assíncrona, escalável e conteinerizada**.
 
-- [Visão Geral](#-visão-geral)
-- [Tecnologias](#-tecnologias)
-- [Funcionalidades](#-funcionalidades)
-- [Comandos Disponíveis](#-comandos-disponíveis)
-- [Automações](#-automações)
-- [Configuração](#-configuração)
-- [Arquitetura](#-arquitetura)
+_⚠️ Este é um repositório de portfólio. As chaves de API, banco de dados de uso real e arquivos sensíveis foram propositalmente omitidos (`.gitignore`)._
 
----
+## 🏗️ Arquitetura do Sistema (V3 Update)
 
-## 🎯 Visão Geral
+O sistema foi redesenhado focando em **Alta Performance (AsyncIO)** e **Inteligência Centralizada**, dividindo a aplicação em camadas claras:
 
-Este bot transforma seu Telegram em uma central de produtividade pessoal, combinando:
+- **Interface Layer (`handlers/`)**: Recebe e processa os comandos de entrada de forma assíncrona utilizando `aiogram 3.x`.
+- **Core Layer (`core/`)**: Orquestrador central impulsionado por **Google Gemini Function Calling**. O bot abandonou Regexes rígidas; agora a IA decide nativamente qual ferramenta usar baseada na intenção do usuário (`tools_definitions.py`).
+- **Service Layer (`services/`)**: Módulos especialistas independentes (Finanças, Agenda, Voz, IA, Estudos, Dashboards).
+- **Security & Privacy Layer (`security/`)**: Responsável por mascarar dados sensíveis.
+- **Data Layer (`data/`, `local_data/`)**: Persistência local com SQLite atrelado a volumes do Docker para segurança de dados entre deploys.
 
-- 🧠 **Inteligência Artificial** para conversação natural e automações
-- 📅 **Google Workspace** (Calendar, Tasks, Classroom, Sheets, Drive)
-- 💰 **Controle Financeiro** com categorização automática
-- 🎓 **Monitor Acadêmico** com alertas de notas
-- ⏱️ **Produtividade** com Pomodoro, hábitos e lembretes
+### Engine de Roteamento Assíncrono
 
----
+O ecossistema não bloqueia mais threads. O `TelegramHandlerV3` despacha eventos via `asyncio`, enquanto agendamentos pró-ativos rodam na engine leve provida pelo `APScheduler`.
 
-## 🛠️ Tecnologias
+## ✨ Principais Funcionalidades
 
-| Tecnologia              | Uso                                       |
-| ----------------------- | ----------------------------------------- |
-| Python 3.x              | Linguagem principal                       |
-| pyTelegramBotAPI        | Interface com Telegram                    |
-| Google Gemini 2.5 Flash | IA multimodal (texto, áudio, imagem, PDF) |
-| Google Calendar API     | Agenda e eventos                          |
-| Google Tasks API        | Tarefas                                   |
-| Google Classroom API    | Atividades e notas                        |
-| Google Sheets API       | Controle financeiro                       |
-| Google Drive API        | Backup de arquivos                        |
-| Open-Meteo API          | Previsão do tempo                         |
-| APScheduler             | Agendamento de tarefas                    |
-| PM2                     | Gerenciador de processos                  |
+- **Coach de Estudos Interativo**: Painéis dinâmicos que conectam metas cruzadas com horas diárias, sugerindo automaticamente a próxima matéria baseada na curva de esquecimento.
+- **Sessões de Notebook (PDFs)**: Roteiros de chat onde o usuário envia PDFs e o bot extrai flashcards, resumos e questões, interagindo através da API do Gemini.
+- **Inteligência Artificial por Function Calling**: Requisições de linguagem natural ("Paguei 50 no Ifood") são mapeadas e executadas nativamente pelas ferramentas do bot (Expense Injection).
+- **Gestão Financeira Dinâmica**: Integração com Google Sheets utilizando _Cache Layers_ locais para reduzir latência.
+- **Notificações Pró-Ativas**: O `SchedulerTasksV3` dispara briefings focais, Lembretes financeiros e relatórios de métricas.
 
----
+## 🚀 Como a Arquitetura Funciona na Prática
 
-## ⚡ Funcionalidades
+- O Docker inicializa o contêiner `jarvis_v3` baseado num alpine/slim image do Python 3.11.
+- O `run_jarvis_v3.py` atua como o entrypoint assíncrono, instanciando os serviços (`FinanceService`, `TaskService`, `StudyCoachService`, etc.).
+- Variáveis locais sensíveis residem fora do container e são injetadas no Compose via `volumes` com privilégios restritos.
 
-### 🗣️ Entrada de Dados
+## 🛠️ Tecnologias Utilizadas
 
-| Tipo      | Suporte                             |
-| --------- | ----------------------------------- |
-| Texto     | ✅ Comandos e conversa natural      |
-| Voz       | ✅ Transcrição automática via IA    |
-| Foto      | ✅ Leitura de recibos (OCR com IA)  |
-| Documento | ✅ Backup no Drive + resumo de PDFs |
+- **Python 3.11+** (`aiogram`, `APScheduler`, `sqlite3`, `asyncio`)
+- **Docker / Docker-Compose** (Containerization & Deployment)
+- **Google Cloud APIs** (Sheets, Calendar, Classroom, Drive)
+- **Google Gemini API** (Function Calling, NLP)
 
-### 📅 Google Agenda
+## ✉️ Contato
 
-- Visualizar compromissos do dia
-- Criar novos eventos por texto ou voz
-- Alertas automáticos (30, 15 e 10 minutos antes)
-
-### 📝 Google Tasks
-
-- Listar tarefas pendentes
-- Criar novas tarefas por texto ou voz
-
-### 🎓 Google Classroom
-
-- Visualizar atividades pendentes
-- **Monitor de Notas**: Alerta quando professor lança nota
-- **Monitor de Entregas**: Parabéns automático ao entregar atividade
-- **Monitor de Devoluções**: Aviso quando atividade é devolvida
-
-### 💰 Controle Financeiro
-
-| Recurso                  | Descrição                           |
-| ------------------------ | ----------------------------------- |
-| Registro de Gastos       | Texto, voz ou foto de recibo        |
-| Categorização Automática | IA classifica automaticamente       |
-| Meta Mensal              | Defina limite e acompanhe progresso |
-| Fechamento Diário        | Resumo às 23:59                     |
-| Relatório Semanal        | Todo domingo às 20h                 |
-| Barra de Progresso       | Visual do quanto gastou da meta     |
-
-### 🧠 Memória de Longo Prazo
-
-- Guarde informações importantes
-- A IA lembra quando você perguntar
-- Histórico com data e hora
-
-### 📈 Hábitos com Streaks
-
-- Crie hábitos para acompanhar
-- Marque como feito diariamente
-- Visualize streaks com 🔥
-
-### ⏱️ Pomodoro
-
-- Timer customizável
-- Alerta ao finalizar
-- Sugestão de pausa
-
-### 💧 Bem-estar
-
-- Lembrete de beber água a cada 2 horas (8h às 22h)
-
-### 📂 Google Drive
-
-- Backup automático de documentos enviados
-- Organização em pasta dedicada
-
-### 📖 Resumo de PDFs
-
-- Envie um PDF e peça resumo
-- IA lê e organiza em tópicos principais
-
----
-
-## 🎮 Comandos Disponíveis
-
-### Menu e Navegação
-
-| Comando  | Descrição                  |
-| -------- | -------------------------- |
-| `/start` | Inicia o bot e mostra menu |
-| `/menu`  | Mostra menu com botões     |
-| `/ajuda` | Lista de comandos          |
-
-### Agenda e Tarefas
-
-| Comando                   | Descrição       |
-| ------------------------- | --------------- |
-| `Nova tarefa [nome]`      | Cria uma tarefa |
-| `Adicionar evento [nome]` | Cria um evento  |
-
-### Financeiro
-
-| Comando                      | Descrição             |
-| ---------------------------- | --------------------- |
-| `Gastei [valor] [descrição]` | Registra gasto        |
-| `/gastei 50 Pizza`           | Formato alternativo   |
-| `/meta 1500`                 | Define meta mensal    |
-| `/meta`                      | Ver progresso da meta |
-
-### Memória
-
-| Comando            | Descrição             |
-| ------------------ | --------------------- |
-| `/lembrar [texto]` | Salva na memória      |
-| `/memoria`         | Lista memórias salvas |
-
-### Hábitos
-
-| Comando          | Descrição              |
-| ---------------- | ---------------------- |
-| `/habito [nome]` | Cria um hábito         |
-| `/fiz [nome]`    | Marca como feito hoje  |
-| `/habitos`       | Lista todos os hábitos |
-
-### Produtividade
-
-| Comando                    | Descrição          |
-| -------------------------- | ------------------ |
-| `/pomodoro [min] [tarefa]` | Inicia timer       |
-| `/pausa`                   | Pausa de 5 minutos |
-
-### Arquivos
-
-| Comando                 | Descrição                   |
-| ----------------------- | --------------------------- |
-| `/resumir`              | Resume o último PDF enviado |
-| _Enviar documento_      | Salva no Google Drive       |
-| _Enviar foto de recibo_ | Lê e registra gasto         |
-
-### Conversa Natural
-
-Qualquer mensagem que não seja comando é processada pela IA com contexto completo (agenda, tarefas, memórias).
-
----
-
-## 🔄 Automações
-
-### Agendamentos Fixos
-
-| Horário                               | Ação                                  |
-| ------------------------------------- | ------------------------------------- |
-| 08:00                                 | ☀️ Bom Dia + Agenda + Clima + Tarefas |
-| 8h, 10h, 12h, 14h, 16h, 18h, 20h, 22h | 💧 Lembrete de água                   |
-| 23:59                                 | 💰 Fechamento financeiro do dia       |
-| Domingo 20:00                         | 📊 Relatório semanal de gastos        |
-
-### Monitoramentos Contínuos
-
-| Intervalo  | Ação                                            |
-| ---------- | ----------------------------------------------- |
-| 1 minuto   | ⏰ Verifica alertas de eventos (30/15/10 min)   |
-| 10 minutos | 🎓 Verifica novas notas e entregas no Classroom |
-
----
-
-## ⚙️ Configuração
-
-### Variáveis de Ambiente (.env)
-
-```env
-TELEGRAM_API_TOKEN=seu_token_aqui
-GEMINI_API_KEY=sua_chave_gemini
-```
-
-### Arquivos Necessários
-
-| Arquivo            | Descrição                                      |
-| ------------------ | ---------------------------------------------- |
-| `credentials.json` | Credenciais OAuth Google                       |
-| `token.json`       | Token de autenticação (gerado automaticamente) |
-| `.env`             | Variáveis de ambiente                          |
-
-### Escopos Google (OAuth)
-
-- `calendar` - Agenda
-- `tasks` - Tarefas
-- `classroom.courses.readonly` - Cursos
-- `classroom.student-submissions.me.readonly` - Atividades
-- `spreadsheets` - Planilhas
-- `drive.file` - Upload de arquivos
-
----
-
-## 🏗️ Arquitetura
-
-```
-whatsapp-calendar-bot/
-├── telegram_bot.py      # Bot principal
-├── gemini_chat.py       # Integração com IA
-├── google_auth.py       # Autenticação Google
-├── google_calendar.py   # API Calendar
-├── google_tasks.py      # API Tasks
-├── google_classroom.py  # API Classroom
-├── google_sheets.py     # API Sheets (Financeiro)
-├── google_drive.py      # API Drive (Backup)
-├── weather.py           # API Clima
-├── credentials.json     # OAuth Google
-├── token.json          # Token de acesso
-├── .env                # Variáveis de ambiente
-├── chat_id.txt         # ID do chat Telegram
-├── meta_mensal.txt     # Meta financeira
-├── memoria.json        # Memória de longo prazo
-└── habitos.json        # Dados de hábitos
-```
-
----
-
-## 🚀 Executando
-
-### Desenvolvimento
-
-```bash
-cd whatsapp-calendar-bot
-python telegram_bot.py
-```
-
-### Produção (PM2)
-
-```bash
-pm2 start telegram_bot.py --name "Assistente" --interpreter ./venv/Scripts/pythonw.exe
-pm2 save
-```
-
-### Comandos PM2 Úteis
-
-```bash
-pm2 list              # Ver status
-pm2 log Assistente    # Ver logs
-pm2 restart Assistente # Reiniciar
-pm2 stop Assistente   # Parar
-```
-
----
-
-## 📊 Modelo de IA
-
-| Aspecto    | Detalhe                                |
-| ---------- | -------------------------------------- |
-| Modelo     | Google Gemini 2.5 Flash                |
-| Tipo       | Multimodal (texto, áudio, imagem, PDF) |
-| Velocidade | < 1 segundo por resposta               |
-| Custo      | Cota gratuita generosa                 |
-
----
-
-## 📱 Uso Típico
-
-1. **Manhã**: Receba o resumo do dia às 8h
-2. **Durante o dia**: Registre gastos por voz, gerencie tarefas
-3. **Ao receber notas**: Notificação automática
-4. **A cada 2h**: Lembrete de hidratação
-5. **À noite**: Fechamento financeiro automático
-6. **Domingo**: Relatório semanal de gastos
-
----
-
-## 🎯 Roadmap Futuro
-
-- [ ] Ativação por voz (wake word)
-- [ ] Integração com Spotify
-- [ ] Relatórios gráficos (imagens de pizza/barras)
-- [ ] Backup automático de conversas
-- [ ] Modo offline com sincronização
-
----
-
-## 👨‍💻 Autor
-
-**Idarlan Magalhaes - Especialista em IA - Certificado pela UFC**
-
-Desenvolvido com ❤️ e muito ☕
-
----
-
-_Última atualização: Janeiro 2026_
+Projeto desenvolvido para otimização de rotinas pessoais e aprendizado prático avançado em Engenharia de Software e Deployments Cloud-Native.
